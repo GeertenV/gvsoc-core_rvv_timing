@@ -5603,6 +5603,8 @@ inline void Vlsu::handle_pending_io_access(Iss *iss)
         int err = this->io_itf[0].req(req);
         if (err == vp::IO_REQ_OK){
             // this->event->enqueue(this->io_req.get_latency() + 1);
+            //inspired by Lsu::store_float
+            this->iss.timing.stall_load_account(this->io_req.get_latency() + 1);
         }
         else if (err == vp::IO_REQ_INVALID){
             this->waiting_io_response = false;
