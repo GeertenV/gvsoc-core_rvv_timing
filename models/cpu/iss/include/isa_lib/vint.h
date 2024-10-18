@@ -5602,7 +5602,7 @@ inline void Vlsu::handle_pending_io_access(Iss *iss)
 
         int err = this->io_itf[0].req(req);
         if (err == vp::IO_REQ_OK){
-            printf("req latency = %d\n", this->io_req.get_latency());
+            this->trace.msg("req latency = %d\n", this->io_req.get_latency());
 
             // old code that was already commented out
             // this->event->enqueue(this->io_req.get_latency() + 1);
