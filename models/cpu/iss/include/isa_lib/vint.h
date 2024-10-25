@@ -5549,7 +5549,8 @@ static inline iss_freg_t lib_FMVFS     (Iss *iss, int vs2, bool vm){
             res = flexfloat_get_bits(&ff_res);
             return iss_freg_t(res);
     }else{
-        printf("REG is 64\n");        
+        // Geerten: I dont know why this is printed but I disabled it.
+        //printf("REG is 64\n");        
         return iss_freg_t(data1);
     }
 }
