@@ -242,9 +242,8 @@ vp::IoReqStatus Memory::req(vp::Block *__this, vp::IoReq *req)
             }
             _this->next_packet_start = MAX(_this->next_packet_start, cycles) + duration;
         }
-        if (_this->power.get_power_trace()->get_active())
-        {
-            printf("Hipperdepipper\n");
+        // if (_this->power.get_power_trace()->get_active())
+        // {
             _this->last_access_timestamp = _this->time.get_time();
             if (req->get_is_write())
             {
@@ -264,7 +263,7 @@ vp::IoReqStatus Memory::req(vp::Block *__this, vp::IoReq *req)
                 else if (size == 4)
                     _this->read_32_power.account_energy_quantum();
             }
-        }
+        // }
     }
 
 #ifdef VP_TRACE_ACTIVE
