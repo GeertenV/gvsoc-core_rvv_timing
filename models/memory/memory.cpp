@@ -225,7 +225,7 @@ vp::IoReqStatus Memory::req(vp::Block *__this, vp::IoReq *req)
 
     req->inc_latency(_this->latency);
 
-    if (req->is_debug())
+    if (!req->is_debug())
     {
         // Impact the Memory bandwith on the packet
         if (_this->width_bits != 0)
@@ -242,11 +242,9 @@ vp::IoReqStatus Memory::req(vp::Block *__this, vp::IoReq *req)
             }
             _this->next_packet_start = MAX(_this->next_packet_start, cycles) + duration;
         }
-
-        if (_this->power.get_power_trace()->get_active())
-        {
+        // if (_this->power.get_power_trace()->get_active())
+        // {
             _this->last_access_timestamp = _this->time.get_time();
-
             if (req->get_is_write())
             {
                 if (size == 1)
@@ -265,7 +263,7 @@ vp::IoReqStatus Memory::req(vp::Block *__this, vp::IoReq *req)
                 else if (size == 4)
                     _this->read_32_power.account_energy_quantum();
             }
-        }
+        // }
     }
 
 #ifdef VP_TRACE_ACTIVE
@@ -275,6 +273,7 @@ vp::IoReqStatus Memory::req(vp::Block *__this, vp::IoReq *req)
         {
             if (*(uint32_t *)data == 0xabbaabba)
             {
+                fprintf(stderr, "@power.measure turned on\n");
                 _this->power.get_engine()->start_capture();
             }
             else if (*(uint32_t *)data == 0xdeadcaca)
@@ -283,6 +282,7 @@ vp::IoReqStatus Memory::req(vp::Block *__this, vp::IoReq *req)
                 _this->power.get_engine()->stop_capture();
                 double dynamic_power, static_power;
                 fprintf(stderr, "@power.measure_%d@%f@\n", measure_index++, _this->power.get_engine()->get_average_power(dynamic_power, static_power));
+                printf("energy measure %e\n",_this->power.get_engine()->get_total_energy());
             }
         }
     }

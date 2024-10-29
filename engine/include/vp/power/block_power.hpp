@@ -117,6 +117,8 @@ namespace vp
 
         double get_average_power(double &dynamic_power, double &static_power);
 
+        double get_total_energy();
+
         double get_instant_power(double &dynamic_power, double &static_power);
 
         gv::PowerReport *get_report() { return &this->report; }
