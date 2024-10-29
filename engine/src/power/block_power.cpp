@@ -96,6 +96,20 @@ double vp::BlockPower::get_average_power(double &dynamic_power, double &static_p
     return result;
 }
 
+double vp::BlockPower::get_total_energy()
+{
+    double result = 0.0;
+
+    for (auto x : this->traces)
+    {
+        double dynamic, leakage;
+        x->get_report_energy(&dynamic, &leakage);
+        result += dynamic + leakage;
+    }
+
+    return result;
+}
+
 double vp::BlockPower::get_instant_power(double &dynamic_power, double &static_power)
 {
     double result = 0.0;
