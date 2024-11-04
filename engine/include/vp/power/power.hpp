@@ -486,7 +486,7 @@ namespace vp
         void stop_capture();
 
         double get_average_power(double &dynamic_power, double &static_power);
-        double get_total_energy();
+        double get_total_energy(double &dynamic_energy, double &static_energy);
 
     protected:
         /**

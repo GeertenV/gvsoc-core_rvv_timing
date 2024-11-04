@@ -282,7 +282,12 @@ vp::IoReqStatus Memory::req(vp::Block *__this, vp::IoReq *req)
                 _this->power.get_engine()->stop_capture();
                 double dynamic_power, static_power;
                 fprintf(stderr, "@power.measure_%d@%f@\n", measure_index++, _this->power.get_engine()->get_average_power(dynamic_power, static_power));
-                printf("energy measure %e\n",_this->power.get_engine()->get_total_energy());
+                double dynamic_energy = 0.0;
+                double static_energy = 0.0;
+                double total_energy = _this->power.get_engine()->get_total_energy(dynamic_energy,static_energy);
+                printf("total_energy measure %e\n",total_energy);
+                printf("dynamic_energy measure %e\n",dynamic_energy);
+                printf("static_energy measure %e\n",static_energy);
             }
         }
     }
