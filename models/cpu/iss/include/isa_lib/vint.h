@@ -3391,6 +3391,7 @@ static inline void lib_FADDVV   (Iss *iss, int vs1,     int vs2, int vd, bool vm
         writeToVReg(iss, SEW, vd, i, resBin);
         }
     }
+    iss->timing.stall_cycles_account(VL/4-1);
 }
 
 static inline void lib_FADDVF   (Iss *iss, int vs2, int64_t rs1, int vd, bool vm){
