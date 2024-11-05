@@ -98,6 +98,7 @@ public:
 
 private:
     Iss &iss;
+    vp::Trace trace;
 
 };
 // define a new class named SPATZ like ISS in class.hpp

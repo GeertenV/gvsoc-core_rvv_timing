@@ -38,6 +38,8 @@ Vlsu::Vlsu(Iss &iss) : iss(iss)
 
 void Vlsu::build()
 {
+    iss.top.traces.new_trace("vlsu", &this->trace, vp::DEBUG);
+    
     for (int i=0; i<4; i++)
     {
         this->io_itf[i].set_resp_meth(&Vlsu::data_response);
