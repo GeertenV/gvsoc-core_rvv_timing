@@ -92,6 +92,7 @@ public:
     int io_retval;
     uint64_t io_pending_addr;
     int io_pending_size;
+    int io_pending_latency;
     uint8_t *io_pending_data;
     bool io_pending_is_write;
     bool waiting_io_response;
