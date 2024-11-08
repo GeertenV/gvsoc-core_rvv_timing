@@ -21,12 +21,13 @@
 
 #pragma once
 
-#include "vp/trace/implementation.hpp"
-#include "vp/clock/implementation.hpp"
-#include "vp/time/implementation.hpp"
-#include "vp/power/power_engine.hpp"
-#include "vp/power/power_trace.hpp"
-#include "vp/power/power_source.hpp"
-#include "vp/power/power_table.hpp"
-#include <vp/register.hpp>
-#include <vp/time/time_event.hpp>
+#include "vp/power/power.hpp"
+
+inline bool vp::PowerEngine::is_enabled()
+{
+#ifndef VP_TRACE_ACTIVE
+    return false;
+#else
+    return this->enabled;
+#endif
+}

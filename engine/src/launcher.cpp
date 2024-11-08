@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/* 
+/*
  * Authors: Germain Haugou, GreenWaves Technologies (germain.haugou@greenwaves-technologies.com)
  */
 
@@ -102,7 +102,9 @@ void gv::GvsocLauncher::open()
         signal(SIGINT, sigint_handler);
 
         this->engine_thread = new std::thread(&gv::GvsocLauncher::engine_routine, this);
+#ifndef __APPLE__
         pthread_setname_np(this->engine_thread->native_handle(), "engine");
+#endif
     }
     else
     {
@@ -134,13 +136,13 @@ void gv::GvsocLauncher::close()
 
     vp::Top *top = (vp::Top *)this->handler;
 
-    delete top;
-
     if (proxy)
     {
         proxy->quit(this->retval);
+        proxy->wait();
     }
 
+    delete top;
 }
 
 void gv::GvsocLauncher::run_internal(bool main_controller)
