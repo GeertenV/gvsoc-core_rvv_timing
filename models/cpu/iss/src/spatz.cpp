@@ -39,6 +39,7 @@ Vlsu::Vlsu(Iss &iss) : iss(iss)
 void Vlsu::build()
 {
     iss.top.traces.new_trace("vlsu", &this->trace, vp::DEBUG);
+    this->io_pending_latency = 0;
     
     for (int i=0; i<4; i++)
     {

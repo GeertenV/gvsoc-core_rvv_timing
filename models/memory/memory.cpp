@@ -228,7 +228,7 @@ vp::IoReqStatus Memory::req(vp::Block *__this, vp::IoReq *req)
     if (!req->is_debug())
     {
         // Impact the Memory bandwith on the packet
-        if (_this->width_bits != 0)
+        if (_this->width_bits >= 0)
         {
     #define MAX(a, b) (((a) > (b)) ? (a) : (b))
             int duration = MAX(size >> _this->width_bits, 1);

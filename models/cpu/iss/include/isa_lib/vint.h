@@ -3391,6 +3391,7 @@ static inline void lib_FADDVV   (Iss *iss, int vs1,     int vs2, int vd, bool vm
         writeToVReg(iss, SEW, vd, i, resBin);
         }
     }
+    iss->timing.stall_cycles_account(VL/4-1);
 }
 
 static inline void lib_FADDVF   (Iss *iss, int vs2, int64_t rs1, int vd, bool vm){
@@ -5618,7 +5619,8 @@ inline void Vlsu::handle_pending_io_access(Iss *iss)
             // #endif
 
             // something that kind of works but all latencies are added on top of eachother
-            this->iss.timing.stall_load_account(this->io_req.get_latency());
+            //this->iss.timing.stall_load_account(this->io_req.get_latency());
+            this->io_pending_latency = MAX(this->io_req.get_latency(),this->io_pending_latency);
 
         }
         else if (err == vp::IO_REQ_INVALID){
@@ -5850,6 +5852,8 @@ static inline void lib_VLE32V(Iss *iss, iss_reg_t rs1, int vd , bool vm){
         // printf("vd_vali = %d\n",(int)(data[3]*pow(2,8*3) + data[2]*pow(2,8*2) + data[1]*pow(2,8) + data[0]));
         start_add += 4;
     }
+    iss->timing.stall_load_account(MAX(iss->spatz.vlsu.io_pending_latency-1,0));
+    iss->spatz.vlsu.io_pending_latency = 0;
 }
 
 static inline void lib_VLE64V(Iss *iss, iss_reg_t rs1, int vd , bool vm){
@@ -6149,6 +6153,8 @@ static inline void lib_VSE32V(Iss *iss, iss_reg_t rs1, int vs3, bool vm){
         //}
         start_add += 4;
     }
+    iss->timing.stall_load_account(MAX(iss->spatz.vlsu.io_pending_latency-1,0));
+    iss->spatz.vlsu.io_pending_latency = 0;
 }
 
 static inline void lib_VSE64V(Iss *iss, iss_reg_t rs1, int vs3, bool vm){
