@@ -64,7 +64,10 @@ double vp::PowerEngine::get_average_power(double &dynamic_power, double &static_
     return this->top->power.get_average_power(dynamic_power, static_power);
 }
 
-
+double vp::PowerEngine::get_total_energy(double &dynamic_energy, double &static_energy)
+{
+    return this->top->power.get_total_energy(dynamic_energy, static_energy);
+}
 
 vp::PowerEngine::PowerEngine()
 {

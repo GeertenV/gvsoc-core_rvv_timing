@@ -5549,7 +5549,8 @@ static inline iss_freg_t lib_FMVFS     (Iss *iss, int vs2, bool vm){
             res = flexfloat_get_bits(&ff_res);
             return iss_freg_t(res);
     }else{
-        printf("REG is 64\n");        
+        // Geerten: I dont know why this is printed but I disabled it.
+        //printf("REG is 64\n");        
         return iss_freg_t(data1);
     }
 }
@@ -5602,7 +5603,23 @@ inline void Vlsu::handle_pending_io_access(Iss *iss)
 
         int err = this->io_itf[0].req(req);
         if (err == vp::IO_REQ_OK){
+            this->trace.msg("req latency = %d\n", this->io_req.get_latency());
+
+            // old code that was already commented out
             // this->event->enqueue(this->io_req.get_latency() + 1);
+
+            // Lsu::store_float implementation
+            // #if defined(PIPELINE_STALL_THRESHOLD)
+            // int64_t latency = this->io_req.get_latency();
+            // if (latency > PIPELINE_STALL_THRESHOLD)
+            // {
+            //     this->iss.timing.stall_load_account(latency - PIPELINE_STALL_THRESHOLD);
+            // }
+            // #endif
+
+            // something that kind of works but all latencies are added on top of eachother
+            this->iss.timing.stall_load_account(this->io_req.get_latency());
+
         }
         else if (err == vp::IO_REQ_INVALID){
             this->waiting_io_response = false;
