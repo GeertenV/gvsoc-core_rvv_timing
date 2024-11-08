@@ -875,7 +875,7 @@ void Spi::create_loader(js::Config *load_config)
     config.mem_size_log2 = 20;
     config.dummy_cycles = load_config->get_child_int("dummy_cycles");
 
-    this->spim_verif = new Spim_verif(this->top, this, &this->itf, &config);
+    this->spim_verif = new Spim_verif(this->top, this, &this->itf, &config, false);
 
     this->spim_verif->enqueue_spi_load(load_config);
 }
@@ -1440,6 +1440,7 @@ std::string Testbench::handle_command(gv::GvProxy *proxy, FILE *req_file, FILE *
             {
                 pi_testbench_i2s_verif_slot_start_config_t *config = (pi_testbench_i2s_verif_slot_start_config_t *)this->req;
                 char *filepath = (char *)config + sizeof(pi_testbench_i2s_verif_slot_start_config_t);
+                int max_filepath_len = PI_TESTBENCH_MAX_REQ_SIZE - sizeof(pi_testbench_i2s_verif_slot_start_config_t);
 
                 *config = {};
                 config->rx_file_reader.pcm2pdm_is_true = FALSE;
@@ -1469,7 +1470,14 @@ std::string Testbench::handle_command(gv::GvProxy *proxy, FILE *req_file, FILE *
                     }
                     else if (name == "filepath")
                     {
-                        strcpy(filepath, value_str.c_str());
+                        if (max_filepath_len < value_str.size() + 1)
+                        {
+                            this->trace.force_warning("File path is too long: %s", value_str.c_str());
+                        }
+                        else
+                        {
+                            strcpy(filepath, value_str.c_str());
+                        }
                     }
                     else if (name == "filetype")
                     {
@@ -1544,6 +1552,7 @@ std::string Testbench::handle_command(gv::GvProxy *proxy, FILE *req_file, FILE *
             {
                 pi_testbench_i2s_verif_slot_start_config_t *config = (pi_testbench_i2s_verif_slot_start_config_t *)this->req;
                 char *filepath = (char *)config + sizeof(pi_testbench_i2s_verif_slot_start_config_t);
+                int max_filepath_len = PI_TESTBENCH_MAX_REQ_SIZE - sizeof(pi_testbench_i2s_verif_slot_start_config_t);
 
                 *config = {};
                 config->tx_file_dumper.pdm2pcm_is_true = FALSE;
@@ -1569,7 +1578,14 @@ std::string Testbench::handle_command(gv::GvProxy *proxy, FILE *req_file, FILE *
                     }
                     else if (name == "filepath")
                     {
-                        strcpy(filepath, value_str.c_str());
+                        if (max_filepath_len < value_str.size() + 1)
+                        {
+                            this->trace.force_warning("File path is too long: %s", value_str.c_str());
+                        }
+                        else
+                        {
+                            strcpy(filepath, value_str.c_str());
+                        }
                     }
                     else if (name == "width")
                     {
@@ -1777,6 +1793,157 @@ std::string Testbench::handle_command(gv::GvProxy *proxy, FILE *req_file, FILE *
                 }
             }
         }
+        if (args[0] == "spi")
+        {
+            if (args[1] == "setup")
+            {
+                pi_testbench_req_spim_verif_setup_t *config = (pi_testbench_req_spim_verif_setup_t *)this->req;
+
+                *config = {};
+
+                std::vector<std::string> params = {args.begin() + 2, args.end()};
+
+                for (std::string x: params)
+                {
+                    int pos = x.find_first_of("=");
+                    std::string name = x.substr(0, pos);
+                    std::string value_str = x.substr(pos + 1);
+                    int value = strtol(value_str.c_str(), NULL, 0);
+
+                    if (name == "itf")
+                    {
+                        config->itf = value;
+                    }
+                    else if (name == "enabled")
+                    {
+                        config->enabled = value;
+                    }
+                    else if (name == "cs")
+                    {
+                        config->cs = value;
+                    }
+                    else if (name == "is_master")
+                    {
+                        config->is_master = value;
+                    }
+                    else if (name == "polarity")
+                    {
+                        config->polarity = value;
+                    }
+                    else if (name == "phase")
+                    {
+                        config->phase = value;
+                    }
+                    else if (name == "mem_size_log2")
+                    {
+                        config->mem_size_log2 = value;
+                    }
+                    else if (name == "dummy_cycles")
+                    {
+                        config->dummy_cycles = value;
+                    }
+                    else
+                    {
+                        return "err=1;msg=invalid option: " + name;
+                    }
+                }
+                Spi* spi = this->spis[4 * config->itf + config->cs];
+                spi->spim_verif = new Spim_verif(spi->top, spi, &spi->itf, config, true);
+            }
+
+            if (args[1] == "full_duplex")
+            {
+                int itf = strtol(args[2].c_str(), NULL, 0);
+                int cs = strtol(args[3].c_str(), NULL, 0);
+                int size = strtol(args[4].c_str(), NULL, 0);
+                uint8_t *buffer = new uint8_t[size];
+                int read_size = fread(buffer, 1, size, req_file);
+                this->spis[4 * itf + cs]->spim_verif->enqueue_buffer(buffer);
+                uint64_t cmd = 0;
+                SPIM_VERIF_BUILD_CMD(cmd, SPIM_VERIF_CMD_FULL_DUPLEX,
+                                     SPIM_VERIF_CMD_BIT, SPIM_VERIF_CMD_WIDTH);
+                SPIM_VERIF_BUILD_CMD(cmd, size*8,
+                                     SPIM_VERIF_CMD_INFO_BIT, SPIM_VERIF_CMD_INFO_WIDTH);
+                this->spis[4 * itf + cs]->spim_verif->enqueue_cmd(cmd);
+            }
+
+            if (args[1] == "tx")
+            {
+                int itf = strtol(args[2].c_str(), NULL, 0);
+                int cs = strtol(args[3].c_str(), NULL, 0);
+                int size = strtol(args[4].c_str(), NULL, 0);
+                uint8_t *buffer = new uint8_t[size];
+                int read_size = fread(buffer, 1, size, req_file);
+                this->spis[4 * itf + cs]->spim_verif->enqueue_buffer(buffer);
+                uint64_t cmd = 0;
+                SPIM_VERIF_BUILD_CMD(cmd, SPIM_VERIF_CMD_READ,
+                                     SPIM_VERIF_CMD_BIT, SPIM_VERIF_CMD_WIDTH);
+                SPIM_VERIF_BUILD_CMD(cmd, size*8,
+                                     SPIM_VERIF_CMD_INFO_BIT, SPIM_VERIF_CMD_INFO_WIDTH);
+                this->spis[4 * itf + cs]->spim_verif->enqueue_cmd(cmd);
+            }
+
+            if(args[1] == "master_cmd")
+            {
+                // commands given in gvcontrol are from testbench point of vue
+                // spim_verif code is from a gap point of vue :
+                //       master = 0 means gap is slave so testbench is master.
+
+                pi_testbench_req_spim_verif_transfer_t *config = new pi_testbench_req_spim_verif_transfer_t;
+                int itf = strtol(args[2].c_str(), NULL, 0);
+                int cs = strtol(args[3].c_str(), NULL, 0);
+                uint32_t size = strtol(args[4].c_str(), NULL, 0);
+                u_int32_t freq = strtol(args[5].c_str(), NULL, 0);
+                u_int8_t duplex = strtol(args[6].c_str(), NULL, 0);
+                u_int8_t rx = strtol(args[7].c_str(), NULL, 0);
+                if(!rx || duplex)
+                {
+                    uint8_t *buffer = new uint8_t[size];
+                    int read_size = fread(buffer, 1, size, req_file);
+                    this->spis[4 * itf + cs]->spim_verif->enqueue_buffer(buffer);
+                }
+
+                config->is_master = 0;
+                config->size = size;
+                config->frequency = freq;
+                config->is_duplex = duplex;
+                config->is_rx = rx;
+                config->is_boot_protocol = 0;
+                config->address = 0;
+                this->spis[4 * itf + cs]->spim_verif->enqueue_master_cmd(config);
+            }
+
+            if (args[1] == "rx")
+            {
+                int itf = strtol(args[2].c_str(), NULL, 0);
+                int cs = strtol(args[3].c_str(), NULL, 0);
+                int size = strtol(args[4].c_str(), NULL, 0);
+                uint64_t cmd = 0;
+                SPIM_VERIF_BUILD_CMD(cmd, SPIM_VERIF_CMD_WRITE,
+                                     SPIM_VERIF_CMD_BIT, SPIM_VERIF_CMD_WIDTH);
+                SPIM_VERIF_BUILD_CMD(cmd, size*8,
+                                     SPIM_VERIF_CMD_INFO_BIT, SPIM_VERIF_CMD_INFO_WIDTH);
+                this->spis[4 * itf + cs]->spim_verif->enqueue_cmd(cmd);
+            }
+
+            if (args[1] == "rx_enable")
+            {
+                int itf = strtol(args[2].c_str(), NULL, 0);
+                int cs = strtol(args[3].c_str(), NULL, 0);
+                int enabled = strtol(args[4].c_str(), NULL, 0);
+
+                if (enabled)
+                {
+                    int req = strtol(args[5].c_str(), NULL, 0);
+                    this->spis[4 * itf + cs]->spim_verif->proxy_file = reply_file;
+                    this->spis[4 * itf + cs]->spim_verif->req = req;
+                }
+                else
+                {
+                    this->spis[4 * itf + cs]->spim_verif->proxy_file = NULL;
+                }
+            }
+        }
     }
     catch (std::invalid_argument& e)
     {
@@ -1843,7 +2010,7 @@ void Spi::spim_verif_setup(pi_testbench_req_spim_verif_setup_t *config)
 
     if (config->enabled)
     {
-        this->spim_verif = new Spim_verif(this->top, this, &this->itf, config);
+        this->spim_verif = new Spim_verif(this->top, this, &this->itf, config, false);
     }
 }
 

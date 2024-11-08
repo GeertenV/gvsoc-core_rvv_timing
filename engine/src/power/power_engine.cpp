@@ -69,13 +69,15 @@ double vp::PowerEngine::get_total_energy(double &dynamic_energy, double &static_
     return this->top->power.get_total_energy(dynamic_energy, static_energy);
 }
 
-vp::PowerEngine::PowerEngine()
+vp::PowerEngine::PowerEngine(js::Config *config)
 {
     this->file = fopen("power_report.csv", "w");
     if (this->file == NULL)
     {
         //vp_warning_always(&this->warning, "Failed to open power report file (path: %s)\n", "power_report.csv");
     }
+
+    this->enabled = config->get("power")->get_bool();
 }
 
 

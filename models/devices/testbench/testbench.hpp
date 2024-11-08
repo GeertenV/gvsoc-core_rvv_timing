@@ -62,7 +62,7 @@ class Uart;
 #define PI_TESTBENCH_CMD_I2S_VERIF_SLOT_STOP 13
 #define PI_TESTBENCH_CMD_GPIO_GET_FREQUENCY 14
 
-#define PI_TESTBENCH_MAX_REQ_SIZE 256
+#define PI_TESTBENCH_MAX_REQ_SIZE 2048
 
 
 typedef enum {
@@ -387,6 +387,7 @@ public:
 
     int itf_id;
     int cs;
+    bool gvcontrol = false;
 };
 
 
